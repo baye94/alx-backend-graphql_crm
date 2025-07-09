@@ -1,5 +1,5 @@
-Django==5.0.2
-graphene-django==3.3.0
+Django==4.2.23  # compatible Python 3.9
+graphene-django==3.2.0
 django-cors-headers==4.3.1
 django-crontab==0.7.1
 gql==3.4.1
@@ -7,4 +7,4 @@ requests==2.31.0
 celery==5.3.6
 django-celery-beat==2.5.0
 redis==5.0.1
-django-filter>=23.0 
+django-filter>=23.0
