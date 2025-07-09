@@ -1,50 +1,19 @@
-cat > crm/cron_jobs/clean_inactive_customers.sh << 'EOF'
 #!/bin/bash
 
-# Get the script directory using BASH_SOURCE
-SCRIPT_DIR="$(dirname "${BASH_SOURCE[0]}")"
+# Get the directory where the script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 
-# Navigate to the Django project directory (two levels up from cron_jobs)
-cd "$SCRIPT_DIR/../.."
+# Change to the project directory
+cd "$PROJECT_DIR"
 
-# Verify we're in the correct directory
-pwd
+# Set Python path to include the project directory
+export PYTHONPATH="${PROJECT_DIR}:${PYTHONPATH}"
 
-# Change working directory to project root
-cwd=$(pwd)
-
-# Get the current timestamp
-timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-
-# Execute Django shell command to delete inactive customers
-deleted_count=$(python manage.py shell << 'PYTHON_EOF'
-import django
-from django.utils import timezone
-from datetime import timedelta
-from crm.models import Customer
-
-# Calculate the date one year ago
-one_year_ago = timezone.now() - timedelta(days=365)
-
-# Find customers with no orders in the last year
-inactive_customers = Customer.objects.filter(
-    orders__isnull=True
-) | Customer.objects.exclude(
-    orders__order_date__gte=one_year_ago
-).distinct()
-
-# Count and delete inactive customers
-count = inactive_customers.count()
-if count > 0:
-    inactive_customers.delete()
-    print(f"Deleted {count} inactive customers")
-else:
-    print("No inactive customers found")
-    
-print(count)
-PYTHON_EOF
-)
-
-# Log the result with timestamp
-echo "[$timestamp] Deleted $deleted_count inactive customers" >> /tmp/customer_cleanup_log.txt
-EOF
+# If in test mode, use a fixed date
+if [ "$TEST_MODE" = "1" ]; then
+    DJANGO_SETTINGS_MODULE=alx_backend_graphql.settings python manage.py cleanup_inactive_customers --reference-date="2024-01-01"
+else
+    # Execute the cleanup command using Django's management command
+    DJANGO_SETTINGS_MODULE=alx_backend_graphql.settings python manage.py cleanup_inactive_customers
+fi 
