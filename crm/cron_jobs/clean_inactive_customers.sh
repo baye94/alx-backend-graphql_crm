@@ -1,6 +1,8 @@
 #!/bin/bash
 
-# Exécute une commande Django pour supprimer les clients inactifs
+# Se placer dans la racine du projet (supposée être 2 niveaux au-dessus du script)
+cd "$(dirname "${BASH_SOURCE[0]}")/../.." || { echo "Failed to cd"; exit 1; }
+
 deleted_count=$(python3 manage.py shell <<EOF
 from datetime import timedelta
 from django.utils import timezone
@@ -14,5 +16,8 @@ print(count)
 EOF
 )
 
-# Log dans un fichier temporaire avec timestamp
-echo "$(date): Deleted $deleted_count inactive customers" >> /tmp/customer_cleanup_log.txt
+if [ -n "$deleted_count" ]; then
+    echo "$(date): Deleted $deleted_count inactive customers" >> /tmp/customer_cleanup_log.txt
+else
+    echo "$(date): No customers deleted or error occurred" >> /tmp/customer_cleanup_log.txt
+fi
