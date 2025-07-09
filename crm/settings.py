@@ -29,7 +29,10 @@ CELERY_BEAT_SCHEDULE = {
         'schedule': crontab(day_of_week='mon', hour=6, minute=0),
     },
 }
+GRAPHENE = {
+    'SCHEMA': 'crm.schema.schema'
+}
 
 CRONJOBS = [
-    ('0 */12 * * *', 'crm.cron.update_low_stock'),
+    ('0 */12 * * *', 'crm.cron.update_low_stock', '>> /tmp/django_crontab.log 2>&1')
 ]
